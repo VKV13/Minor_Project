@@ -1,0 +1,101 @@
+# 1. Load the Data
+#-------------------------
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = pd.read_csv("https://raw.githubusercontent.com/arora123/Data/master/emp-data.csv")
+# Display the first few rows of the dataset
+print("First few rows of the dataset:")
+print(data.head())
+
+
+# 2. Data Exploration
+#---------------------------
+# Overview of the dataset
+print(data.info())
+
+# Summary statistics
+print("Summary Statistics:")
+print(data.describe(include='all'))
+
+
+# Data Cleaning
+#-----------------------
+# Checking if there any missing values
+print(data.isna().sum())
+
+# Filling up of missing data
+data['Gender'].fillna('Unknown', inplace=True)
+mean_salary = data['Salary'].mean()
+data['Salary'] = data['Salary'].fillna(mean_salary)
+mode_department = data['Department'].mode()[0]
+data['Department'] = data['Department'].fillna(mode_department)
+print(data.isna().sum())
+
+
+# 3. Answers of the Objectives
+#-------------------------------------
+# 1. Count of males and females in the entire organization
+print(data['Gender'].value_counts())
+
+# 2. Count of males and females in each department and each location
+print( data.groupby(['Loc', 'Department', 'Gender']).size().unstack())
+
+# 3. Department with the highest average pay
+print(f"Department with the highest average pay: {data.groupby('Department')['Salary'].mean().idxmax()}")
+
+# 4. Location with the highest average pay
+print(f"Location with the highest average pay: {data.groupby('Loc')['Salary'].mean().idxmax()}")
+
+# 5. Percentage of employees with different ratings
+print( data['Rating'].value_counts(normalize=True) * 100)
+
+# 6. Compute and interpret the gender pay gap for each department
+gender_pay_gap = data.groupby(['Department', 'Gender'])['Salary'].mean().unstack()
+gender_pay_gap['Pay Gap'] = gender_pay_gap['Male'] - gender_pay_gap['Female']
+print(gender_pay_gap)
+
+# 7. Compute and interpret the gender pay gap for each location
+gender_pay_gap = data.groupby(['Loc', 'Gender'])['Salary'].mean().unstack()
+gender_pay_gap['Pay Gap'] = gender_pay_gap['Male'] - gender_pay_gap['Female']
+print(gender_pay_gap)
+
+
+# 4. Additional Exercises
+#Visualizations
+#---------------------------------------
+# Gender distribution
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Gender', data=data)
+plt.title('Gender Distribution')
+plt.show()
+
+# Gender distribution by department
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Department', hue='Gender', data=data)
+plt.title('Gender Distribution by Department')
+plt.show()
+
+# Gender distribution by location
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Loc', hue='Gender', data=data)
+plt.title('Gender Distribution by Location')
+plt.show()
+
+# Salary distribution by gender
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Gender', y='Salary', data=data)
+plt.title('Salary Distribution by Gender')
+plt.show()
+
+# Statistical Methods
+#--------------------------
+# Correlation between salary and rating
+rating_mapping = {'Poor': 1, 'Average': 2, 'Good': 3, 'Very Good': 4}
+data['rating_encoded'] = data['Rating'].map(rating_mapping)
+correlation = data['Salary'].corr(data['rating_encoded'])
+print(f"Correlation between salary and rating: {correlation:.2f}")
+
+# Group by gender and location and compute average salary
+print(data.groupby(['Gender', 'Loc'])['Salary'].mean().unstack())
